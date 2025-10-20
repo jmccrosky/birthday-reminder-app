@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
-        api.defaults.headers.common.Authorization = `Bearer ${storedToken}`;
+        // Token is automatically included via axios interceptor
       }
     } catch (error) {
       console.error('Error loading auth:', error);
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(authToken);
     setUser(userData);
-    api.defaults.headers.common.Authorization = `Bearer ${authToken}`;
+    // Token is automatically included via axios interceptor
   };
 
   const register = async (email: string, password: string, name: string) => {
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(authToken);
     setUser(userData);
-    api.defaults.headers.common.Authorization = `Bearer ${authToken}`;
+    // Token is automatically included via axios interceptor
   };
 
   const logout = async () => {
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(null);
     setUser(null);
-    delete api.defaults.headers.common.Authorization;
+    // Token is automatically removed via axios interceptor
   };
 
   return (

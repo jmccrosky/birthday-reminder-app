@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, date, uuid, text, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, timestamp, date, uuid, text, boolean, integer } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -19,7 +19,7 @@ export const birthdays = pgTable('birthdays', {
   birthDate: date('birth_date').notNull(),
   notes: text('notes'),
   notificationEnabled: boolean('notification_enabled').default(true).notNull(),
-  notificationDaysBefore: serial('notification_days_before').default(0).notNull(),
+  notificationDaysBefore: integer('notification_days_before').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

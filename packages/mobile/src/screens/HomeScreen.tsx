@@ -24,9 +24,11 @@ interface Props {
 export default function HomeScreen({ navigation }: Props) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
   const [loading, setLoading] = useState(false);
-  const { logout } = useAuth();
+  const { logout, token } = useAuth();
 
   const loadBirthdays = async () => {
+    if (!token) return; // Don't load if no token yet
+
     setLoading(true);
     try {
       const data = await birthdayApi.getAll();
@@ -41,7 +43,7 @@ export default function HomeScreen({ navigation }: Props) {
   useFocusEffect(
     useCallback(() => {
       loadBirthdays();
-    }, [])
+    }, [token])
   );
 
   const handleDelete = async (id: string, name: string) => {
