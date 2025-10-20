@@ -1,5 +1,6 @@
 import UIKit
 import React_RCTAppDelegate
+import React
 
 @main
 class AppDelegate: RCTAppDelegate {
@@ -8,14 +9,15 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "BirthdayReminder"
+    self.initialProps = [:]
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
-  override func sourceURL(for bridge: RCTBridge) -> URL? {
+  override func sourceURL(for bridge: RCTBridge!) -> URL! {
 #if DEBUG
-    return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    return URL(string: "http://localhost:8081/index.bundle?platform=ios")!
 #else
-    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")!
 #endif
   }
 }
