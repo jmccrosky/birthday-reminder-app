@@ -1,0 +1,29 @@
+{
+  "name": "birthday-reminder-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Birthday reminder iOS app with backend",
+  "scripts": {
+    "backend:dev": "pnpm --filter backend dev",
+    "backend:build": "pnpm --filter backend build",
+    "backend:test": "pnpm --filter backend test",
+    "mobile:ios": "pnpm --filter mobile ios",
+    "mobile:start": "pnpm --filter mobile start",
+    "mobile:build:ios": "pnpm --filter mobile build:ios",
+    "mobile:deploy:testflight": "pnpm --filter mobile deploy:testflight",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

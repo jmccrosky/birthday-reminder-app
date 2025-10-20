@@ -1,0 +1,7 @@
+app_identifier(ENV["APP_IDENTIFIER"] || "com.yourcompany.birthdayreminder")
+apple_id(ENV["APPLE_ID"])
+team_id(ENV["TEAM_ID"])
+
+# App Store Connect API Key (recommended)
+# You can create this in App Store Connect under Users and Access > Keys
+# Download the key and reference it with APP_STORE_CONNECT_API_KEY_PATH
