@@ -2,15 +2,15 @@ import { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { db } from '../db';
 import { birthdays } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, gte, sql } from 'drizzle-orm';
 import { authenticateUser } from '../middleware/auth';
 
 const createBirthdaySchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1).max(255),
   birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  notes: z.string().optional(),
+  notes: z.string().max(2000).optional(),
   notificationEnabled: z.boolean().default(true),
-  notificationDaysBefore: z.number().int().min(0).default(0),
+  notificationDaysBefore: z.number().int().min(0).max(365).default(0),
 });
 
 const updateBirthdaySchema = createBirthdaySchema.partial();
@@ -32,6 +32,22 @@ export const birthdayRoutes: FastifyPluginAsync = async (server) => {
   server.post('/', async (request, reply) => {
     const userId = (request as any).userId;
     const body = createBirthdaySchema.parse(request.body);
+
+    // Check rate limit: 100 birthdays per user per day
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    const recentBirthdays = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(birthdays)
+      .where(and(eq(birthdays.userId, userId), gte(birthdays.createdAt, oneDayAgo)));
+
+    const count = Number(recentBirthdays[0]?.count || 0);
+    if (count >= 100) {
+      return reply.code(429).send({
+        error: 'Rate limit exceeded. Maximum 100 birthdays per day.'
+      });
+    }
 
     const [birthday] = await db
       .insert(birthdays)

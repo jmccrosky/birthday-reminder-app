@@ -6,9 +6,9 @@ import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
 
 const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  name: z.string().min(1),
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(128),
+  name: z.string().min(1).max(255),
 });
 
 const loginSchema = z.object({
@@ -17,7 +17,14 @@ const loginSchema = z.object({
 });
 
 export const authRoutes: FastifyPluginAsync = async (server) => {
-  server.post('/register', async (request, reply) => {
+  server.post('/register', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 day',
+      },
+    },
+  }, async (request, reply) => {
     const body = registerSchema.parse(request.body);
 
     const existing = await db.query.users.findFirst({

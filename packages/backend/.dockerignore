@@ -6,4 +6,7 @@ dist
 .git
 .DS_Store
 coverage
-drizzle
+# Don't exclude drizzle - we need migration files!
+.terraform
+*.tfstate
+*.tfstate.backup

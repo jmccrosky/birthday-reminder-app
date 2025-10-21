@@ -7,15 +7,18 @@ terraform {
     }
   }
 
-  backend "gcs" {
-    bucket = "birthday-reminder-terraform-state"
-    prefix = "terraform/state"
-  }
+  # Commented out for initial setup - using local state
+  # backend "gcs" {
+  #   bucket = "birthday-reminder-terraform-state"
+  #   prefix = "terraform/state"
+  # }
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project         = var.project_id
+  region          = var.region
+  billing_project = var.project_id
+  user_project_override = true
 }
 
 # Enable required APIs
@@ -30,6 +33,7 @@ resource "google_project_service" "required_apis" {
     "artifactregistry.googleapis.com",
     "pubsub.googleapis.com",
     "cloudscheduler.googleapis.com",
+    "iam.googleapis.com",
   ])
 
   service            = each.key
@@ -50,12 +54,29 @@ resource "google_compute_subnetwork" "subnet" {
   network       = google_compute_network.vpc.id
 }
 
+# Private IP range for Cloud SQL
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "${var.app_name}-private-ip"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.vpc.id
+}
+
+# Private VPC connection for Cloud SQL
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+  depends_on              = [google_project_service.required_apis]
+}
+
 # Cloud SQL PostgreSQL Instance
 resource "google_sql_database_instance" "postgres" {
   name             = "${var.app_name}-db"
   database_version = "POSTGRES_15"
   region           = var.region
-  depends_on       = [google_project_service.required_apis]
+  depends_on       = [google_project_service.required_apis, google_service_networking_connection.private_vpc_connection]
 
   settings {
     tier              = var.db_tier
@@ -120,6 +141,7 @@ resource "google_pubsub_subscription" "notifications_sub" {
 resource "google_service_account" "api_service_account" {
   account_id   = "${var.app_name}-api-sa"
   display_name = "Service Account for ${var.app_name} API"
+  depends_on   = [google_project_service.required_apis]
 }
 
 resource "google_project_iam_member" "api_sa_sql_client" {
@@ -136,7 +158,7 @@ resource "google_project_iam_member" "api_sa_pubsub_publisher" {
 
 # VPC Connector for Cloud Run to Cloud SQL
 resource "google_vpc_access_connector" "connector" {
-  name          = "${var.app_name}-connector"
+  name          = "birthdayreminder-conn"
   region        = var.region
   network       = google_compute_network.vpc.name
   ip_cidr_range = "10.8.0.0/28"
@@ -158,11 +180,6 @@ resource "google_cloud_run_service" "api" {
         env {
           name  = "NODE_ENV"
           value = var.environment
-        }
-
-        env {
-          name  = "PORT"
-          value = "8080"
         }
 
         env {

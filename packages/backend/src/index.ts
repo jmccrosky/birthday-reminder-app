@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
 import { config } from './config';
@@ -24,6 +25,13 @@ async function start() {
 
     await server.register(jwt, {
       secret: config.jwtSecret,
+    });
+
+    // Rate limiting - global defaults
+    await server.register(rateLimit, {
+      global: false, // We'll apply rate limits per route
+      max: 100,
+      timeWindow: '1 minute',
     });
 
     // Swagger documentation
