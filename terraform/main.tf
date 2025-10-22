@@ -184,7 +184,7 @@ resource "google_cloud_run_service" "api" {
 
         env {
           name  = "DATABASE_URL"
-          value = "postgresql://${google_sql_user.db_user.name}:${var.database_password}@/${google_sql_database.database.name}?host=/cloudsql/${google_sql_database_instance.postgres.connection_name}"
+          value = "postgresql://${google_sql_user.db_user.name}:${urlencode(var.database_password)}@/${google_sql_database.database.name}?host=/cloudsql/${google_sql_database_instance.postgres.connection_name}"
         }
 
         env {
