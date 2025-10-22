@@ -123,6 +123,10 @@ DB_USER=$(grep database_user terraform.tfvars | cut -d'"' -f2)
 # URL-encode the password for the connection string
 DB_PASSWORD_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${DB_PASSWORD}', safe=''))")
 
+# Clean up any existing proxy container
+echo "Cleaning up any existing Cloud SQL Proxy container..."
+${CONTAINER_CMD} rm -f cloudsql-proxy 2>/dev/null || true
+
 # Run migrations via Cloud SQL Proxy in a temporary container
 echo "Starting Cloud SQL Proxy using ${CONTAINER_CMD}..."
 ${CONTAINER_CMD} run -d --name cloudsql-proxy \
