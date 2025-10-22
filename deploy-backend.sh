@@ -120,6 +120,9 @@ DB_PASSWORD=$(grep database_password terraform.tfvars | cut -d'"' -f2)
 DB_NAME=$(grep database_name terraform.tfvars | cut -d'"' -f2)
 DB_USER=$(grep database_user terraform.tfvars | cut -d'"' -f2)
 
+# URL-encode the password for the connection string
+DB_PASSWORD_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${DB_PASSWORD}', safe=''))")
+
 # Run migrations via Cloud SQL Proxy in a temporary container
 echo "Starting Cloud SQL Proxy using ${CONTAINER_CMD}..."
 ${CONTAINER_CMD} run -d --name cloudsql-proxy \
@@ -134,7 +137,7 @@ sleep 5
 
 # Run migrations
 cd ../packages/backend
-DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}" \
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD_ENCODED}@localhost:5432/${DB_NAME}" \
   npm run migrate
 
 # Stop and remove proxy
