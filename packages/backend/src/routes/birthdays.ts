@@ -7,10 +7,19 @@ import { authenticateUser } from '../middleware/auth';
 
 const createBirthdaySchema = z.object({
   name: z.string().min(1).max(255),
-  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  birthMonth: z.number().int().min(1).max(12),
+  birthDay: z.number().int().min(1).max(31),
+  birthYear: z.number().int().min(1900).max(new Date().getFullYear()).optional().nullable(),
   notes: z.string().max(2000).optional(),
   notificationEnabled: z.boolean().default(true),
   notificationDaysBefore: z.number().int().min(0).max(365).default(0),
+}).refine((data) => {
+  // Validate day is valid for the given month
+  const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  return data.birthDay <= daysInMonth[data.birthMonth - 1];
+}, {
+  message: 'Invalid day for the specified month',
+  path: ['birthDay'],
 });
 
 const updateBirthdaySchema = createBirthdaySchema.partial();
@@ -23,7 +32,7 @@ export const birthdayRoutes: FastifyPluginAsync = async (server) => {
 
     const userBirthdays = await db.query.birthdays.findMany({
       where: eq(birthdays.userId, userId),
-      orderBy: (birthdays, { asc }) => [asc(birthdays.birthDate)],
+      orderBy: (birthdays, { asc }) => [asc(birthdays.birthMonth), asc(birthdays.birthDay)],
     });
 
     return { birthdays: userBirthdays };

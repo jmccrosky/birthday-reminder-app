@@ -40,6 +40,7 @@ export default function EditBirthdayScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [yearUnknown, setYearUnknown] = useState(false);
 
   useEffect(() => {
     loadBirthday();
@@ -49,7 +50,13 @@ export default function EditBirthdayScreen({ navigation, route }: Props) {
     try {
       const birthday = await birthdayApi.getById(birthdayId);
       setName(birthday.name);
-      setDate(parseISO(birthday.birthDate));
+
+      // Reconstruct date from month/day/year fields
+      const year = birthday.birthYear || new Date().getFullYear();
+      const dateObj = new Date(year, birthday.birthMonth - 1, birthday.birthDay);
+      setDate(dateObj);
+      setYearUnknown(!birthday.birthYear);
+
       setNotes(birthday.notes || '');
       setNotificationEnabled(birthday.notificationEnabled);
       setDaysBefore(String(birthday.notificationDaysBefore));
@@ -71,7 +78,9 @@ export default function EditBirthdayScreen({ navigation, route }: Props) {
     try {
       await birthdayApi.update(birthdayId, {
         name,
-        birthDate: format(date, 'yyyy-MM-dd'),
+        birthMonth: date.getMonth() + 1,
+        birthDay: date.getDate(),
+        birthYear: yearUnknown ? null : date.getFullYear(),
         notes: notes || undefined,
         notificationEnabled,
         notificationDaysBefore: parseInt(daysBefore, 10) || 0,
@@ -107,13 +116,20 @@ export default function EditBirthdayScreen({ navigation, route }: Props) {
           editable={!saving}
         />
 
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>I don't know the birth year</Text>
+          <Switch value={yearUnknown} onValueChange={setYearUnknown} />
+        </View>
+
         <Text style={styles.label}>Birth Date</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
           disabled={saving}
         >
-          <Text style={styles.dateText}>{format(date, 'MMMM d, yyyy')}</Text>
+          <Text style={styles.dateText}>
+            {yearUnknown ? format(date, 'MMMM d') : format(date, 'MMMM d, yyyy')}
+          </Text>
         </TouchableOpacity>
 
         <DatePicker

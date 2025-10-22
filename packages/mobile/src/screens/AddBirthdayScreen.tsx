@@ -31,6 +31,7 @@ export default function AddBirthdayScreen({ navigation }: Props) {
   const [daysBefore, setDaysBefore] = useState('0');
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [yearUnknown, setYearUnknown] = useState(false);
 
   const handleSave = async () => {
     if (!name) {
@@ -42,7 +43,9 @@ export default function AddBirthdayScreen({ navigation }: Props) {
     try {
       await birthdayApi.create({
         name,
-        birthDate: format(date, 'yyyy-MM-dd'),
+        birthMonth: date.getMonth() + 1, // 1-12
+        birthDay: date.getDate(), // 1-31
+        birthYear: yearUnknown ? null : date.getFullYear(),
         notes: notes || undefined,
         notificationEnabled,
         notificationDaysBefore: parseInt(daysBefore, 10) || 0,
@@ -70,13 +73,20 @@ export default function AddBirthdayScreen({ navigation }: Props) {
           editable={!loading}
         />
 
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>I don't know the birth year</Text>
+          <Switch value={yearUnknown} onValueChange={setYearUnknown} />
+        </View>
+
         <Text style={styles.label}>Birth Date</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
           disabled={loading}
         >
-          <Text style={styles.dateText}>{format(date, 'MMMM d, yyyy')}</Text>
+          <Text style={styles.dateText}>
+            {yearUnknown ? format(date, 'MMMM d') : format(date, 'MMMM d, yyyy')}
+          </Text>
         </TouchableOpacity>
 
         <DatePicker

@@ -64,21 +64,35 @@ export default function HomeScreen({ navigation }: Props) {
     ]);
   };
 
-  const renderBirthday = ({ item }: { item: Birthday }) => (
-    <TouchableOpacity
-      style={styles.birthdayCard}
-      onPress={() => navigation.navigate('EditBirthday', { birthdayId: item.id })}
-      onLongPress={() => handleDelete(item.id, item.name)}
-    >
-      <View style={styles.birthdayInfo}>
-        <Text style={styles.birthdayName}>{item.name}</Text>
-        <Text style={styles.birthdayDate}>
-          {format(parseISO(item.birthDate), 'MMMM d, yyyy')}
-        </Text>
-        {item.notes && <Text style={styles.birthdayNotes}>{item.notes}</Text>}
-      </View>
-    </TouchableOpacity>
-  );
+  const renderBirthday = ({ item }: { item: Birthday }) => {
+    // Reconstruct date for display
+    const year = item.birthYear || new Date().getFullYear();
+    const dateObj = new Date(year, item.birthMonth - 1, item.birthDay);
+
+    const dateDisplay = item.birthYear
+      ? format(dateObj, 'MMMM d, yyyy')
+      : format(dateObj, 'MMMM d');
+
+    // Calculate age if year is known
+    const age = item.birthYear ? new Date().getFullYear() - item.birthYear : null;
+    const ageDisplay = age !== null ? ` (${age} years old)` : '';
+
+    return (
+      <TouchableOpacity
+        style={styles.birthdayCard}
+        onPress={() => navigation.navigate('EditBirthday', { birthdayId: item.id })}
+        onLongPress={() => handleDelete(item.id, item.name)}
+      >
+        <View style={styles.birthdayInfo}>
+          <Text style={styles.birthdayName}>{item.name}</Text>
+          <Text style={styles.birthdayDate}>
+            {dateDisplay}{ageDisplay}
+          </Text>
+          {item.notes && <Text style={styles.birthdayNotes}>{item.notes}</Text>}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   React.useLayoutEffect(() => {
     navigation.setOptions({

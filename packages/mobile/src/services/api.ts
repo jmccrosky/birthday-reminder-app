@@ -29,7 +29,9 @@ export interface Birthday {
   id: string;
   userId: string;
   name: string;
-  birthDate: string;
+  birthMonth: number; // 1-12
+  birthDay: number; // 1-31
+  birthYear: number | null; // null if year unknown
   notes?: string;
   notificationEnabled: boolean;
   notificationDaysBefore: number;
@@ -39,7 +41,9 @@ export interface Birthday {
 
 export interface CreateBirthdayData {
   name: string;
-  birthDate: string;
+  birthMonth: number; // 1-12
+  birthDay: number; // 1-31
+  birthYear: number | null; // null if year unknown
   notes?: string;
   notificationEnabled?: boolean;
   notificationDaysBefore?: number;

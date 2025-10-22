@@ -16,7 +16,9 @@ export const birthdays = pgTable('birthdays', {
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   name: varchar('name', { length: 255 }).notNull(),
-  birthDate: date('birth_date').notNull(),
+  birthMonth: integer('birth_month').notNull(), // 1-12
+  birthDay: integer('birth_day').notNull(), // 1-31
+  birthYear: integer('birth_year'), // nullable - year unknown if null
   notes: text('notes'),
   notificationEnabled: boolean('notification_enabled').default(true).notNull(),
   notificationDaysBefore: integer('notification_days_before').default(0).notNull(),

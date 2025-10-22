@@ -11,7 +11,8 @@ export function startNotificationCron() {
 
     try {
       const today = new Date();
-      const todayStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const todayMonth = today.getMonth() + 1; // 1-12
+      const todayDay = today.getDate(); // 1-31
 
       // Find birthdays happening today or within notification window
       const upcomingBirthdays = await db
@@ -24,15 +25,23 @@ export function startNotificationCron() {
         .where(
           and(
             eq(birthdays.notificationEnabled, true),
-            sql`to_char(${birthdays.birthDate}, 'MM-DD') = ${todayStr}`
+            eq(birthdays.birthMonth, todayMonth),
+            eq(birthdays.birthDay, todayDay)
           )
         );
 
       for (const { birthday, user } of upcomingBirthdays) {
         if (user.deviceToken) {
+          // Calculate age if birth year is known
+          let message = `Today is ${birthday.name}'s birthday!`;
+          if (birthday.birthYear) {
+            const age = today.getFullYear() - birthday.birthYear;
+            message = `Today is ${birthday.name}'s ${age}${getOrdinalSuffix(age)} birthday!`;
+          }
+
           await sendPushNotification(user.deviceToken, {
             title: 'Birthday Reminder',
-            body: `Today is ${birthday.name}'s birthday!`,
+            body: message,
             data: {
               birthdayId: birthday.id,
             },
@@ -47,4 +56,13 @@ export function startNotificationCron() {
   });
 
   console.log('Birthday notification cron job started');
+}
+
+function getOrdinalSuffix(num: number): string {
+  const j = num % 10;
+  const k = num % 100;
+  if (j === 1 && k !== 11) return 'st';
+  if (j === 2 && k !== 12) return 'nd';
+  if (j === 3 && k !== 13) return 'rd';
+  return 'th';
 }
