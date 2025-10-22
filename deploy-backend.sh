@@ -121,9 +121,10 @@ DB_NAME=$(grep database_name terraform.tfvars | cut -d'"' -f2)
 DB_USER=$(grep database_user terraform.tfvars | cut -d'"' -f2)
 
 # Run migrations via Cloud SQL Proxy in a temporary container
-echo "Starting Cloud SQL Proxy..."
-docker run -d --name cloudsql-proxy \
-  -v /Users/jmccrosky/git/birthdays/gcp-service-account.json:/config \
+echo "Starting Cloud SQL Proxy using ${CONTAINER_CMD}..."
+${CONTAINER_CMD} run -d --name cloudsql-proxy \
+  -p 5432:5432 \
+  -v ${SCRIPT_DIR}/gcp-service-account.json:/config \
   gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
   --credentials-file=/config \
   $DB_INSTANCE
@@ -133,12 +134,12 @@ sleep 5
 
 # Run migrations
 cd ../packages/backend
-DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@host.docker.internal:5432/${DB_NAME}" \
+DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}" \
   npm run migrate
 
 # Stop and remove proxy
-docker stop cloudsql-proxy
-docker rm cloudsql-proxy
+${CONTAINER_CMD} stop cloudsql-proxy
+${CONTAINER_CMD} rm cloudsql-proxy
 
 echo "✓ Database migrations completed"
 
