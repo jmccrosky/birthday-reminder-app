@@ -4,6 +4,9 @@ import jwt from '@fastify/jwt';
 import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUI from '@fastify/swagger-ui';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { Pool } from 'pg';
 import { config } from './config';
 import { authRoutes } from './routes/auth';
 import { birthdayRoutes } from './routes/birthdays';
@@ -16,8 +19,23 @@ const server = Fastify({
   },
 });
 
+async function runMigrations() {
+  const pool = new Pool({
+    connectionString: config.databaseUrl,
+  });
+  const db = drizzle(pool);
+
+  console.log('Running database migrations...');
+  await migrate(db, { migrationsFolder: './drizzle' });
+  console.log('Database migrations completed!');
+
+  await pool.end();
+}
+
 async function start() {
   try {
+    // Run migrations first
+    await runMigrations();
     // Register plugins
     await server.register(cors, {
       origin: true, // Configure appropriately for production

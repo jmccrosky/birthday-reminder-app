@@ -20,7 +20,7 @@ export const authRoutes: FastifyPluginAsync = async (server) => {
   server.post('/register', {
     config: {
       rateLimit: {
-        max: 5,
+        max: 20,
         timeWindow: '1 day',
       },
     },

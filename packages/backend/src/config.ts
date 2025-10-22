@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Load .env.production if NODE_ENV is production, otherwise .env
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env';
+dotenv.config({ path: path.join(__dirname, '..', '..', envFile) });
 
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',

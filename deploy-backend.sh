@@ -72,14 +72,22 @@ cd ..
 # Configure Docker for Artifact Registry
 gcloud auth configure-docker ${REGION}-docker.pkg.dev
 
-# Build the image
-echo "Building Docker image..."
-docker build -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${APP_NAME}-docker/api:latest \
+# Detect if using podman or docker
+if command -v podman &> /dev/null; then
+  CONTAINER_CMD="podman"
+else
+  CONTAINER_CMD="docker"
+fi
+
+# Build the image for AMD64 (required for Cloud Run)
+echo "Building Docker image for linux/amd64 using ${CONTAINER_CMD}..."
+${CONTAINER_CMD} build --platform linux/amd64 \
+  -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${APP_NAME}-docker/api:latest \
   -f packages/backend/Dockerfile .
 
 # Push the image
 echo "Pushing image to Artifact Registry..."
-docker push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${APP_NAME}-docker/api:latest
+${CONTAINER_CMD} push ${REGION}-docker.pkg.dev/${PROJECT_ID}/${APP_NAME}-docker/api:latest
 
 echo "✓ Docker image pushed successfully"
 

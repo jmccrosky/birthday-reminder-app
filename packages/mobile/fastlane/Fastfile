@@ -19,17 +19,43 @@ platform :ios do
       readonly: is_ci
     )
 
+    # Update Xcode project code signing settings
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "./ios/BirthdayReminder.xcodeproj",
+      team_id: ENV["TEAM_ID"],
+      bundle_identifier: ENV["APP_IDENTIFIER"],
+      profile_name: "match AppStore #{ENV['APP_IDENTIFIER']}",
+      code_sign_identity: "iPhone Distribution"
+    )
+
+    # Bundle React Native JavaScript and assets
+    # This avoids Ruby version conflicts during xcodebuild
+    UI.message("📦 Bundling React Native JavaScript for production...")
+    sh("cd .. && pnpm react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle --assets-dest ios")
+
     # Build the app
+    # Skip the React Native bundling script since we already bundled above
+    # Unset BUNDLE_GEMFILE to avoid CocoaPods scripts trying to use bundler
+    ENV.delete('BUNDLE_GEMFILE')
+    ENV.delete('BUNDLE_BIN_PATH')
+    ENV.delete('RUBYOPT')
+
     build_app(
       workspace: "./ios/BirthdayReminder.xcworkspace",
       scheme: "BirthdayReminder",
+      configuration: "Release",
       export_method: "app-store",
       output_directory: "./build",
       output_name: "BirthdayReminder.ipa",
       clean: true,
+      xcargs: "DEVELOPMENT_TEAM=#{ENV['TEAM_ID']} SKIP_BUNDLING=1",
       export_options: {
+        method: "app-store",
+        teamID: ENV["TEAM_ID"],
+        signingStyle: "manual",
         provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => ENV["PROVISIONING_PROFILE_SPECIFIER"]
+          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV['APP_IDENTIFIER']}"
         }
       }
     )

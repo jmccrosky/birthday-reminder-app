@@ -81,9 +81,14 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 **/ExportOptions.plist
+**/app-store-connect-api-key.json
+fastlane/.env
 
 # Bundle artifacts
 *.jsbundle
 
 # CocoaPods
 ios/Pods/
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.cursor/rules/snyk_rules.mdc

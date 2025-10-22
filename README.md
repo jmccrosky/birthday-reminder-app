@@ -40,15 +40,21 @@ birthday-reminder-monorepo/
 └── .github/workflows/    # CI/CD pipelines
 ```
 
+## Quick Links
+
+- **[Deployment Guide](./DEPLOYMENT.md)** - Complete guide for deploying backend and iOS app
+- **[Mobile Setup](./packages/mobile/SETUP.md)** - iOS development environment setup
+- **[Backend README](./packages/backend/README.md)** - Backend API documentation
+
 ## Prerequisites
 
 - Node.js >= 20
 - pnpm >= 8
-- Docker
+- Docker or Podman
 - Terraform >= 1.6
 - Google Cloud SDK (`gcloud` CLI)
-- Ruby >= 3.2 (for Fastlane)
-- Xcode (for iOS development)
+- Ruby >= 3.4 (Homebrew, for Fastlane)
+- Xcode >= 15 (for iOS development)
 - Apple Developer Account
 - Google Cloud Platform account
 
@@ -144,77 +150,29 @@ nano .env
 
 ## Backend Deployment
 
-### Deploy Infrastructure with Terraform
+**Quick deployment**: Use the automated script from the project root:
 
 ```bash
-cd terraform
-
-# Authenticate with service account
-export GOOGLE_APPLICATION_CREDENTIALS=~/terraform-key.json
-
-# Initialize Terraform
-terraform init
-
-# Review the plan
-terraform plan
-
-# Apply infrastructure
-terraform apply
-
-# Save the outputs
-terraform output -json > outputs.json
+./deploy-backend.sh
 ```
 
-The Terraform apply will create:
-- VPC network and subnet
-- Cloud SQL PostgreSQL instance
-- Cloud Run service
-- Pub/Sub topic and subscription
-- Artifact Registry repository
-- Service accounts and IAM bindings
-- Cloud Scheduler job for daily notifications
+This script will:
+1. Initialize and apply Terraform infrastructure
+2. Build Docker image for linux/amd64 (required for Cloud Run)
+3. Push to Artifact Registry
+4. Deploy to Cloud Run
+5. Run database migrations automatically on startup
 
-### Build and Deploy Backend
-
-```bash
-# From project root
-cd packages/backend
-
-# Build Docker image
-docker build -t us-central1-docker.pkg.dev/$GCP_PROJECT_ID/birthday-reminder-docker/api:latest -f Dockerfile ../..
-
-# Authenticate Docker with Artifact Registry
-gcloud auth configure-docker us-central1-docker.pkg.dev
-
-# Push image
-docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/birthday-reminder-docker/api:latest
-
-# Deploy to Cloud Run (already configured by Terraform)
-# The service will auto-deploy when you push new images
-```
-
-### Run Database Migrations
-
-```bash
-# Connect to Cloud SQL via proxy
-cloud_sql_proxy -instances=CONNECTION_NAME=tcp:5432 &
-
-# Run migrations
-cd packages/backend
-pnpm migrate
-```
+For detailed deployment instructions and manual steps, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### Verify Backend Deployment
 
 ```bash
-# Get the API URL from Terraform output
-API_URL=$(terraform output -raw api_url)
-
 # Test health endpoint
-curl $API_URL/health
+curl https://birthday-reminder-api-3jwpshkfiq-uc.a.run.app/health
 
 # View API documentation
-open $API_URL/documentation
+open https://birthday-reminder-api-3jwpshkfiq-uc.a.run.app/documentation
 ```
 
 ## iOS App Setup and Deployment
@@ -288,45 +246,30 @@ nano packages/mobile/src/services/api.ts
 
 ### 5. Build and Deploy to TestFlight
 
-#### One-Command Deployment
+**Quick deployment**:
 
 ```bash
 cd packages/mobile
-
-# This will:
-# 1. Install pods
-# 2. Sync certificates
-# 3. Increment build number
-# 4. Build the app
-# 5. Upload to TestFlight
-pnpm deploy:testflight
-
-# Or using the package.json script from root:
-pnpm mobile:deploy:testflight
+/opt/homebrew/lib/ruby/gems/3.4.0/bin/bundle exec fastlane beta
 ```
 
-#### Manual Steps
+This will:
+1. Install CocoaPods dependencies
+2. Sync certificates via Match
+3. Increment build number automatically
+4. Pre-bundle React Native JavaScript (avoids Ruby conflicts)
+5. Build and archive the iOS app
+6. Upload to TestFlight
 
-If you prefer to run steps individually:
+**Duration**: ~2-3 minutes
 
-```bash
-cd packages/mobile
-
-# Install CocoaPods dependencies
-pnpm pods
-
-# Sync certificates and profiles
-bundle exec fastlane sync_certificates
-
-# Build and upload to TestFlight
-bundle exec fastlane ios beta
-```
+For detailed iOS deployment instructions, troubleshooting, and manual steps, see [DEPLOYMENT.md](./DEPLOYMENT.md).
 
 ### 6. Distribute via TestFlight
 
 1. Go to [App Store Connect](https://appstoreconnect.apple.com)
 2. Navigate to your app > TestFlight
-3. Wait for processing to complete
+3. Wait for processing (~5-15 minutes)
 4. Add internal/external testers
 5. Submit for review (if external testing)
 

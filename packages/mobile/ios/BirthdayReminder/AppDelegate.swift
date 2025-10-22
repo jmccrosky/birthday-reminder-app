@@ -14,16 +14,12 @@ class AppDelegate: RCTAppDelegate {
   }
 
   override func sourceURL(for bridge: RCTBridge!) -> URL! {
-    // Try Metro bundler first (for development)
-    if let metroURL = URL(string: "http://localhost:8081/index.bundle?platform=ios") {
-      return metroURL
-    }
-
-    // Fallback to bundled JS (for production)
-    if let bundleURL = Bundle.main.url(forResource: "main", withExtension: "jsbundle") {
-      return bundleURL
-    }
-
-    fatalError("Unable to find React Native bundle - neither Metro nor bundled JS found")
+    #if DEBUG
+      // In development, use Metro bundler
+      return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+    #else
+      // In production, use the bundled JS file
+      return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+    #endif
   }
 }

@@ -122,6 +122,21 @@ If Metro won't start:
 pnpm start --reset-cache
 ```
 
+## Deploying to TestFlight
+
+For production deployments to TestFlight, see the [DEPLOYMENT.md](../../DEPLOYMENT.md) guide in the root directory.
+
+**Quick command:**
+```bash
+cd packages/mobile
+/opt/homebrew/lib/ruby/gems/3.4.0/bin/bundle exec fastlane beta
+```
+
+This will build and upload to TestFlight automatically. The process includes:
+- Pre-bundling React Native JavaScript (avoids Ruby conflicts)
+- Building the iOS app
+- Uploading to TestFlight
+
 ## Next Steps
 
 Once the app runs successfully:
@@ -130,3 +145,4 @@ Once the app runs successfully:
 2. Configure Apple Developer account in `fastlane/.env`
 3. Set up Fastlane Match for code signing
 4. Test push notifications on physical device
+5. Deploy to TestFlight using the command above

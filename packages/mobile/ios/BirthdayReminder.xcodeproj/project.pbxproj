@@ -179,7 +179,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
+			shellScript = "set -e\n\n# If SKIP_BUNDLING is set, copy the pre-generated bundle instead of generating a new one\nif [ \"$SKIP_BUNDLING\" = \"1\" ]; then\n  echo \"Using pre-generated React Native bundle\"\n  \n  BUNDLE_FILE=\"$SRCROOT/main.jsbundle\"\n  DEST=\"$CONFIGURATION_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\n  \n  if [ -f \"$BUNDLE_FILE\" ]; then\n    echo \"Copying $BUNDLE_FILE to $DEST/\"\n    cp \"$BUNDLE_FILE\" \"$DEST/main.jsbundle\"\n    \n    # Also copy assets if they exist\n    if [ -d \"$SRCROOT/assets\" ]; then\n      echo \"Copying assets\"\n      cp -R \"$SRCROOT/assets/\" \"$DEST/\"\n    fi\n    \n    echo \"✅ Pre-generated bundle copied successfully\"\n  else\n    echo \"❌ Error: Pre-generated bundle not found at $BUNDLE_FILE\"\n    exit 1\n  fi\n  \n  exit 0\nfi\n\n# Normal bundling for development builds\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"\\\"$WITH_ENVIRONMENT\\\" \\\"$REACT_NATIVE_XCODE\\\"\"\n";
 		};
 		00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -257,7 +257,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = B7675M3LXW;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = BirthdayReminder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -271,8 +274,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.incitefuldataconsulting.birthdayreminder;
 				PRODUCT_NAME = BirthdayReminder;
+				PROVISIONING_PROFILE_SPECIFIER = "match AppStore com.incitefuldataconsulting.birthdayreminder";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -285,7 +289,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 11;
+				DEVELOPMENT_TEAM = B7675M3LXW;
 				INFOPLIST_FILE = BirthdayReminder/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -298,8 +305,9 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.incitefuldataconsulting.birthdayreminder;
 				PRODUCT_NAME = BirthdayReminder;
+				PROVISIONING_PROFILE_SPECIFIER = "match AppStore com.incitefuldataconsulting.birthdayreminder";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
