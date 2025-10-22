@@ -12,12 +12,19 @@ PROJECT_ID="birthday-reminder-475716"
 REGION="us-central1"
 APP_NAME="birthday-reminder"
 
-# Check if gcloud is authenticated
-if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
-  echo "❌ Error: Not authenticated with gcloud"
-  echo "Please run: gcloud auth login"
+# Set up service account credentials
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export GOOGLE_APPLICATION_CREDENTIALS="${SCRIPT_DIR}/gcp-service-account.json"
+
+if [ ! -f "$GOOGLE_APPLICATION_CREDENTIALS" ]; then
+  echo "❌ Error: Service account key not found at $GOOGLE_APPLICATION_CREDENTIALS"
   exit 1
 fi
+
+echo "🔑 Using service account: $GOOGLE_APPLICATION_CREDENTIALS"
+
+# Authenticate gcloud with the service account
+gcloud auth activate-service-account --key-file="$GOOGLE_APPLICATION_CREDENTIALS"
 
 # Set the project
 echo "📋 Setting GCP project to $PROJECT_ID..."
