@@ -5,7 +5,7 @@ import { birthdays } from '../db/schema';
 import { eq, and, gte, sql } from 'drizzle-orm';
 import { authenticateUser } from '../middleware/auth';
 
-const createBirthdaySchema = z.object({
+const baseBirthdaySchema = z.object({
   name: z.string().min(1).max(255),
   birthMonth: z.number().int().min(1).max(12),
   birthDay: z.number().int().min(1).max(31),
@@ -13,7 +13,9 @@ const createBirthdaySchema = z.object({
   notes: z.string().max(2000).optional(),
   notificationEnabled: z.boolean().default(true),
   notificationDaysBefore: z.number().int().min(0).max(365).default(0),
-}).refine((data) => {
+});
+
+const createBirthdaySchema = baseBirthdaySchema.refine((data) => {
   // Validate day is valid for the given month
   const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   return data.birthDay <= daysInMonth[data.birthMonth - 1];
@@ -22,7 +24,7 @@ const createBirthdaySchema = z.object({
   path: ['birthDay'],
 });
 
-const updateBirthdaySchema = createBirthdaySchema.partial();
+const updateBirthdaySchema = baseBirthdaySchema.partial();
 
 export const birthdayRoutes: FastifyPluginAsync = async (server) => {
   server.addHook('onRequest', authenticateUser);
