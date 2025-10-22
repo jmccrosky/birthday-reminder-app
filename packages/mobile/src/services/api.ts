@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Update this URL to match your Cloud Run deployment
-const API_URL = process.env.API_URL || 'http://localhost:3000/api';
+const API_URL = process.env.API_URL || 'https://birthday-reminder-api-3jwpshkfiq-uc.a.run.app/api';
 
 export const api = axios.create({
   baseURL: API_URL,
