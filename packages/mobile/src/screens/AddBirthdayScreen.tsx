@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { birthdayApi } from '../services/api';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
+import MonthDayPicker from '../components/MonthDayPicker';
 
 type AddBirthdayScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddBirthday'>;
 
@@ -89,17 +90,33 @@ export default function AddBirthdayScreen({ navigation }: Props) {
           </Text>
         </TouchableOpacity>
 
-        <DatePicker
-          modal
-          open={showDatePicker}
-          date={date}
-          mode="date"
-          onConfirm={(selectedDate) => {
-            setShowDatePicker(false);
-            setDate(selectedDate);
-          }}
-          onCancel={() => setShowDatePicker(false)}
-        />
+        {yearUnknown ? (
+          <MonthDayPicker
+            visible={showDatePicker}
+            month={date.getMonth() + 1}
+            day={date.getDate()}
+            onConfirm={(month, day) => {
+              setShowDatePicker(false);
+              const newDate = new Date(date);
+              newDate.setMonth(month - 1);
+              newDate.setDate(day);
+              setDate(newDate);
+            }}
+            onCancel={() => setShowDatePicker(false)}
+          />
+        ) : (
+          <DatePicker
+            modal
+            open={showDatePicker}
+            date={date}
+            mode="date"
+            onConfirm={(selectedDate) => {
+              setShowDatePicker(false);
+              setDate(selectedDate);
+            }}
+            onCancel={() => setShowDatePicker(false)}
+          />
+        )}
 
         <Text style={styles.label}>Notes (Optional)</Text>
         <TextInput
