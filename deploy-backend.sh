@@ -110,45 +110,15 @@ echo ""
 echo "✓ Cloud Run service deployed"
 echo "  API URL: $API_URL"
 
-# Step 5: Run database migrations
+# Step 5: Database migrations (run automatically on Cloud Run startup)
 echo ""
-echo "5️⃣  Running database migrations..."
-echo "Connecting to Cloud SQL to run migrations..."
-
-# Get database password from terraform.tfvars
-DB_PASSWORD=$(grep database_password terraform.tfvars | cut -d'"' -f2)
-DB_NAME=$(grep database_name terraform.tfvars | cut -d'"' -f2)
-DB_USER=$(grep database_user terraform.tfvars | cut -d'"' -f2)
-
-# URL-encode the password for the connection string
-DB_PASSWORD_ENCODED=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${DB_PASSWORD}', safe=''))")
-
-# Clean up any existing proxy container
-echo "Cleaning up any existing Cloud SQL Proxy container..."
-${CONTAINER_CMD} rm -f cloudsql-proxy 2>/dev/null || true
-
-# Run migrations via Cloud SQL Proxy in a temporary container
-echo "Starting Cloud SQL Proxy using ${CONTAINER_CMD}..."
-${CONTAINER_CMD} run -d --name cloudsql-proxy \
-  -p 5432:5432 \
-  -v ${SCRIPT_DIR}/gcp-service-account.json:/config \
-  gcr.io/cloud-sql-connectors/cloud-sql-proxy:latest \
-  --credentials-file=/config \
-  $DB_INSTANCE
-
-# Wait for proxy to start
-sleep 5
-
-# Run migrations
-cd ../packages/backend
-DATABASE_URL="postgresql://${DB_USER}:${DB_PASSWORD_ENCODED}@localhost:5432/${DB_NAME}" \
-  npm run migrate
-
-# Stop and remove proxy
-${CONTAINER_CMD} stop cloudsql-proxy
-${CONTAINER_CMD} rm cloudsql-proxy
-
-echo "✓ Database migrations completed"
+echo "5️⃣  Database migrations..."
+echo "ℹ️  Migrations run automatically when the Cloud Run container starts."
+echo "   Check the Cloud Run logs to verify migrations completed successfully."
+echo ""
+echo "To view migration logs:"
+echo "  gcloud logging read \"resource.type=cloud_run_revision AND textPayload=~'migration'\" --limit=20 --project=${PROJECT_ID}"
+echo ""
 
 # Step 6: Summary
 echo ""
