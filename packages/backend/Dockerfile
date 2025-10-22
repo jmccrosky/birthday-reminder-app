@@ -17,11 +17,8 @@ COPY packages/backend ./packages/backend
 # Install dependencies - this will install to workspace root and link properly
 RUN pnpm install --no-frozen-lockfile
 
-# Generate database migrations
+# Build (migrations are already in git, no need to generate)
 WORKDIR /app/packages/backend
-RUN pnpm exec drizzle-kit generate
-
-# Build
 RUN pnpm build
 
 # Production stage
