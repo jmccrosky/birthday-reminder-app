@@ -43,7 +43,7 @@ fi
 # Step 2: Deploy infrastructure with Terraform
 echo ""
 echo "2️⃣  Deploying infrastructure with Terraform..."
-echo "This will create:"
+echo "This will create/update:"
 echo "  - VPC and networking"
 echo "  - Cloud SQL PostgreSQL instance"
 echo "  - Artifact Registry"
@@ -52,15 +52,8 @@ echo "  - VPC Connector"
 echo "  - Pub/Sub topic"
 echo "  - Cloud Scheduler job"
 echo ""
-read -p "Continue with Terraform apply? (y/n) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "Deployment cancelled"
-  exit 1
-fi
 
-terraform plan
-terraform apply
+terraform apply -auto-approve
 
 # Get outputs from Terraform
 DB_INSTANCE=$(terraform output -raw database_connection_name)
@@ -88,7 +81,7 @@ fi
 
 # Build the image for AMD64 (required for Cloud Run)
 echo "Building Docker image for linux/amd64 using ${CONTAINER_CMD}..."
-${CONTAINER_CMD} build --platform linux/amd64 \
+${CONTAINER_CMD} build --no-cache --platform linux/amd64 \
   -t ${REGION}-docker.pkg.dev/${PROJECT_ID}/${APP_NAME}-docker/api:latest \
   -f packages/backend/Dockerfile .
 
