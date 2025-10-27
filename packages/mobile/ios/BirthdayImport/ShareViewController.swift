@@ -1,3 +1,10 @@
+//
+//  ShareViewController.swift
+//  BirthdayImport
+//
+//  Created by Jesse Mccrosky on 27.10.2025.
+//
+
 import UIKit
 import Social
 import MobileCoreServices
@@ -5,7 +12,7 @@ import UniformTypeIdentifiers
 
 class ShareViewController: SLComposeServiceViewController {
 
-    let appGroupIdentifier = "group.com.birthdayreminder.shared"
+    let appGroupIdentifier = "group.com.incitefuldataconsulting.birthdayreminder"
     let sharedKey = "pendingCSVImport"
 
     override func isContentValid() -> Bool {

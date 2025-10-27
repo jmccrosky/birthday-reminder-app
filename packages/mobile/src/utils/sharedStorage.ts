@@ -1,6 +1,6 @@
 import { NativeModules, Platform } from 'react-native';
 
-const APP_GROUP_ID = 'group.com.birthdayreminder.shared';
+const APP_GROUP_ID = 'group.com.incitefuldataconsulting.birthdayreminder';
 const PENDING_IMPORT_KEY = 'pendingCSVImport';
 
 export interface PendingImport {
