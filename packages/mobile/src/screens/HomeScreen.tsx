@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -14,6 +14,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { useFocusEffect } from '@react-navigation/native';
+import {
+  groupBirthdaysBySection,
+  BirthdaySection,
+  BirthdayWithNextDate,
+  formatDaysUntil,
+} from '../utils/birthdayCalculations';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -23,6 +29,7 @@ interface Props {
 
 export default function HomeScreen({ navigation }: Props) {
   const [birthdays, setBirthdays] = useState<Birthday[]>([]);
+  const [sections, setSections] = useState<BirthdaySection[]>([]);
   const [loading, setLoading] = useState(false);
   const { logout, token } = useAuth();
 
@@ -33,6 +40,9 @@ export default function HomeScreen({ navigation }: Props) {
     try {
       const data = await birthdayApi.getAll();
       setBirthdays(data);
+      // Group birthdays into sections
+      const grouped = groupBirthdaysBySection(data);
+      setSections(grouped);
     } catch (error) {
       Alert.alert('Error', 'Could not load birthdays');
     } finally {
@@ -55,7 +65,11 @@ export default function HomeScreen({ navigation }: Props) {
         onPress: async () => {
           try {
             await birthdayApi.delete(id);
-            setBirthdays((prev) => prev.filter((b) => b.id !== id));
+            const updatedBirthdays = birthdays.filter((b) => b.id !== id);
+            setBirthdays(updatedBirthdays);
+            // Re-group after deletion
+            const grouped = groupBirthdaysBySection(updatedBirthdays);
+            setSections(grouped);
           } catch (error) {
             Alert.alert('Error', 'Could not delete birthday');
           }
@@ -64,7 +78,7 @@ export default function HomeScreen({ navigation }: Props) {
     ]);
   };
 
-  const renderBirthday = ({ item }: { item: Birthday }) => {
+  const renderBirthday = ({ item }: { item: BirthdayWithNextDate }) => {
     // Reconstruct date for display
     const year = item.birthYear || new Date().getFullYear();
     const dateObj = new Date(year, item.birthMonth - 1, item.birthDay);
@@ -77,6 +91,9 @@ export default function HomeScreen({ navigation }: Props) {
     const age = item.birthYear ? new Date().getFullYear() - item.birthYear : null;
     const ageDisplay = age !== null ? ` (${age} years old)` : '';
 
+    // Format days until text
+    const daysUntilText = formatDaysUntil(item.daysUntil);
+
     return (
       <TouchableOpacity
         style={styles.birthdayCard}
@@ -84,7 +101,15 @@ export default function HomeScreen({ navigation }: Props) {
         onLongPress={() => handleDelete(item.id, item.name)}
       >
         <View style={styles.birthdayInfo}>
-          <Text style={styles.birthdayName}>{item.name}</Text>
+          <View style={styles.birthdayHeader}>
+            <Text style={styles.birthdayName}>{item.name}</Text>
+            <Text style={[
+              styles.daysUntil,
+              item.daysUntil === 0 && styles.daysUntilToday
+            ]}>
+              {daysUntilText}
+            </Text>
+          </View>
           <Text style={styles.birthdayDate}>
             {dateDisplay}{ageDisplay}
           </Text>
@@ -93,6 +118,12 @@ export default function HomeScreen({ navigation }: Props) {
       </TouchableOpacity>
     );
   };
+
+  const renderSectionHeader = ({ section }: { section: BirthdaySection }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionHeaderText}>{section.title}</Text>
+    </View>
+  );
 
   React.useLayoutEffect(() => {
     navigation.setOptions({
@@ -122,11 +153,13 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
-          data={birthdays}
+        <SectionList
+          sections={sections}
           renderItem={renderBirthday}
+          renderSectionHeader={renderSectionHeader}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          stickySectionHeadersEnabled={true}
           refreshControl={<RefreshControl refreshing={loading} onRefresh={loadBirthdays} />}
         />
       )}
@@ -167,11 +200,27 @@ const styles = StyleSheet.create({
   birthdayInfo: {
     flex: 1,
   },
+  birthdayHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   birthdayName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 5,
+    flex: 1,
+  },
+  daysUntil: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginLeft: 10,
+  },
+  daysUntilToday: {
+    color: '#FF3B30',
+    fontSize: 15,
   },
   birthdayDate: {
     fontSize: 16,
@@ -204,5 +253,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  sectionHeader: {
+    backgroundColor: '#f5f5f5',
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  sectionHeaderText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#666',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
